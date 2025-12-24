@@ -1,21 +1,26 @@
-import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router';
-import { useState, useEffect } from 'react';
-import { LoginForm } from '@/components/auth/LoginForm';
-import { useAuth } from '@/contexts/AuthContext';
-import { LoadingSpinner, InlineError } from '@/components/layout';
-import { apiClient } from '@/lib/api-client';
-import { getErrorMessage } from '@/lib/error-handler';
-import { getRedirectPath } from '@/lib/navigation';
-import { PieChart } from 'lucide-react';
+import {
+  createFileRoute,
+  useNavigate,
+  useSearch,
+} from "@tanstack/react-router";
+import { useState, useEffect } from "react";
+import { LoginForm } from "@/components/auth/LoginForm";
+import { useAuth } from "@/contexts/AuthContext";
+import { LoadingSpinner, InlineError } from "@/components/layout";
+import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/error-handler";
+import { getRedirectPath } from "@/lib/navigation";
+import { PieChart } from "lucide-react";
 
 interface LoginSearch {
   redirect?: string;
 }
 
-export const Route = createFileRoute('/login')({
+export const Route = createFileRoute("/login")({
   validateSearch: (search: Record<string, unknown>): LoginSearch => {
     return {
-      redirect: typeof search.redirect === 'string' ? search.redirect : undefined,
+      redirect:
+        typeof search.redirect === "string" ? search.redirect : undefined,
     };
   },
   component: LoginPage,
@@ -23,10 +28,16 @@ export const Route = createFileRoute('/login')({
 
 function LoginPage() {
   const navigate = useNavigate();
-  const search = useSearch({ from: '/login' });
-  const { login, isAuthenticated, isLoading, error: authError, clearError } = useAuth();
+  const search = useSearch({ from: "/login" });
+  const {
+    login,
+    isAuthenticated,
+    isLoading,
+    error: authError,
+    clearError,
+  } = useAuth();
   const [loginLoading, setLoginLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>("");
 
   // Redirect to dashboard if already authenticated
   useEffect(() => {
@@ -38,18 +49,18 @@ function LoginPage() {
 
   // Clear errors when component mounts
   useEffect(() => {
-    setError('');
+    setError("");
     clearError();
   }, [clearError]);
 
   const handleLogin = async (email: string, password: string) => {
     setLoginLoading(true);
-    setError('');
+    setError("");
     clearError();
 
     try {
       const data = await apiClient.login(email, password);
-      
+
       // Use AuthProvider's login method
       login(data.token, data.user);
 
@@ -65,10 +76,12 @@ function LoginPage() {
   };
 
   const handleSwitchToRegister = () => {
-    const redirectParam = search.redirect ? { redirect: search.redirect } : undefined;
-    navigate({ 
-      to: '/register',
-      search: redirectParam
+    const redirectParam = search.redirect
+      ? { redirect: search.redirect }
+      : undefined;
+    navigate({
+      to: "/register",
+      search: redirectParam,
     });
   };
 
@@ -81,7 +94,9 @@ function LoginPage() {
             <PieChart className="h-6 w-6" />
           </div>
           <LoadingSpinner size="lg" />
-          <p className="text-sm text-muted-foreground mt-4">Loading Finance Tracker...</p>
+          <p className="text-sm text-muted-foreground mt-4">
+            Loading Duitmu...
+          </p>
         </div>
       </div>
     );
@@ -101,20 +116,20 @@ function LoginPage() {
           <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-primary text-primary-foreground mx-auto mb-4">
             <PieChart className="h-8 w-8" />
           </div>
-          <h1 className="text-4xl font-bold mb-2">Finance Tracker</h1>
-          <p className="text-muted-foreground">Sign in to your account</p>
+          <h1 className="text-4xl font-bold mb-2">Duite.</h1>
+          <p className="text-muted-foreground">uangmu terbang kemanakah ~</p>
         </div>
-        
+
         {displayError && (
-          <InlineError 
-            description={displayError} 
+          <InlineError
+            description={displayError}
             onDismiss={() => {
-              setError('');
+              setError("");
               clearError();
             }}
           />
         )}
-        
+
         <LoginForm
           onSubmit={handleLogin}
           onSwitchToRegister={handleSwitchToRegister}
