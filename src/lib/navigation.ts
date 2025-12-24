@@ -132,7 +132,7 @@ export function getNavigationItems() {
     {
       title: 'Debts & Receivables',
       href: routes.debtsReceivables,
-      icon: 'CreditCard',
+      icon: 'ArrowRightLeft',
       description: "Track what you owe and what's owed to you",
     },
     {

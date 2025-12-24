@@ -35,40 +35,38 @@ export const Route = createFileRoute('/api/dashboard')({
           const startDate = url.searchParams.get('startDate');
           const endDate = url.searchParams.get('endDate');
 
-          // Get comprehensive financial position
+          // Get comprehensive financial position first (needed for health score and optimization)
           const financialPosition = await FinancialSummaryService.calculateFinancialPosition(
             payload.userId,
             startDate || undefined,
             endDate || undefined
           );
 
-          // Get monthly comparison
-          const monthlyComparison = await FinancialSummaryService.getMonthlyComparison(payload.userId);
+          // Execute independent fetchers in parallel for performance
+          const [
+            monthlyComparison,
+            financialTrends,
+            realTimeMetrics,
+            recentTransactions,
+            overdue,
+            investmentSummary,
+            dailySpending
+          ] = await Promise.all([
+            FinancialSummaryService.getMonthlyComparison(payload.userId),
+            FinancialSummaryService.getFinancialTrends(payload.userId, 6),
+            FinancialSummaryService.getRealTimeMetrics(payload.userId, financialPosition),
+            TransactionService.getFiltered(
+              { userId: payload.userId },
+              { field: 'createdAt', direction: 'desc' },
+              10
+            ),
+            DebtReceivableService.getOverdue(payload.userId),
+            InvestmentService.getInvestmentSummary(payload.userId),
+            FinancialSummaryService.getDailySpending(payload.userId)
+          ]);
 
-          // Get financial trends
-          const financialTrends = await FinancialSummaryService.getFinancialTrends(payload.userId, 6);
-
-          // Get real-time metrics
-          const realTimeMetrics = await FinancialSummaryService.getRealTimeMetrics(payload.userId);
-
-          // Get financial health score
+          // Calculate financial health score
           const healthScore = FinancialSummaryService.calculateFinancialHealthScore(financialPosition);
-
-          // Get recent transactions (last 10)
-          const recentTransactions = await TransactionService.getFiltered(
-            { userId: payload.userId },
-            { field: 'createdAt', direction: 'desc' },
-            10
-          );
-
-          // Get overdue items
-          const overdue = await DebtReceivableService.getOverdue(payload.userId);
-
-          // Get investment summary
-          const investmentSummary = await InvestmentService.getInvestmentSummary(payload.userId);
-
-          // Get daily spending (This Month vs Last Month)
-          const dailySpending = await FinancialSummaryService.getDailySpending(payload.userId);
 
           return json({
             financialPosition,

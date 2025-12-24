@@ -50,6 +50,8 @@ interface FinancialGoalsWidgetProps {
   onViewAll?: () => void;
 }
 
+import { Skeleton } from '@/components/ui/skeleton';
+
 export function FinancialGoalsWidget({ onCreateGoal, onViewAll }: FinancialGoalsWidgetProps) {
   const { token } = useAuth();
   const [goals, setGoals] = useState<GoalProgress[]>([]);
@@ -125,8 +127,6 @@ export function FinancialGoalsWidget({ onCreateGoal, onViewAll }: FinancialGoals
     }
   };
 
-
-
   if (loading) {
     return (
       <Card>
@@ -136,7 +136,7 @@ export function FinancialGoalsWidget({ onCreateGoal, onViewAll }: FinancialGoals
         <CardContent>
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-20 bg-muted animate-pulse rounded" />
+              <Skeleton key={i} className="h-20" />
             ))}
           </div>
         </CardContent>

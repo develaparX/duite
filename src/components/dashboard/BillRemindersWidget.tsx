@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   Clock
 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface BillReminderStatus {
   billReminder: {
@@ -157,7 +158,7 @@ export function BillRemindersWidget({ onCreateBill, onViewAll }: BillRemindersWi
         <CardContent>
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-16 bg-muted animate-pulse rounded" />
+              <Skeleton key={i} className="h-16" />
             ))}
           </div>
         </CardContent>

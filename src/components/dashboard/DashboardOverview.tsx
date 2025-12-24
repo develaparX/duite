@@ -24,6 +24,7 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { QuickExpenseDialog } from './QuickExpenseDialog';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface FinancialPosition {
   totalIncome: number;
@@ -272,42 +273,9 @@ export function DashboardOverview({ startDate, endDate }: DashboardOverviewProps
     }).format(numAmount);
   };
 
-  if (loading) {
-    return (
-      <div className="flex-1 space-y-4 pt-6">
-        <div className="flex items-center justify-between space-y-2">
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-           {[...Array(4)].map((_, i) => (
-             <Card key={i} className="h-[120px] animate-pulse rounded-xl bg-muted/50" />
-           ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex-1 space-y-4 pt-6">
-         <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription className="flex items-center gap-2">
-            {error}
-            <Button variant="outline" size="sm" onClick={fetchDashboardData} className="ml-auto">Retry</Button>
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
-  if (!data) return null;
-
-  const { financialPosition, monthlyComparison, healthScore, recentTransactions, overdue, realTimeMetrics, dailySpending } = data;
-
   const getCashFlowTrendIcon = () => {
-    switch (financialPosition.cashFlowTrend) {
+    if (!data) return <Activity className="h-4 w-4 text-muted-foreground" />;
+    switch (data.financialPosition.cashFlowTrend) {
       case 'positive': return <TrendingUp className="h-4 w-4 text-green-600" />;
       case 'negative': return <TrendingDown className="h-4 w-4 text-red-600" />;
       default: return <Activity className="h-4 w-4 text-yellow-600" />;
@@ -315,7 +283,8 @@ export function DashboardOverview({ startDate, endDate }: DashboardOverviewProps
   };
 
   const getCashFlowTrendColor = () => {
-    switch (financialPosition.cashFlowTrend) {
+    if (!data) return 'text-muted-foreground';
+    switch (data.financialPosition.cashFlowTrend) {
       case 'positive': return 'text-green-600';
       case 'negative': return 'text-red-600';
       default: return 'text-yellow-600';
@@ -332,13 +301,17 @@ export function DashboardOverview({ startDate, endDate }: DashboardOverviewProps
           </p>
         </div>
         <div className="flex items-center space-x-3 w-full sm:w-auto">
-          <Badge variant="outline" className="py-1.5 px-3 flex items-center space-x-2 w-full sm:w-auto justify-center bg-background shadow-sm">
-            {getCashFlowTrendIcon()}
-            <span className={`font-medium ${getCashFlowTrendColor()}`}>
-              {financialPosition.cashFlowTrend === 'positive' ? 'Positive Cash Flow' : 
-               financialPosition.cashFlowTrend === 'negative' ? 'Negative Cash Flow' : 'Stable Cash Flow'}
-            </span>
-          </Badge>
+          {loading ? (
+             <Skeleton className="h-9 w-32 rounded-full" />
+          ) : (
+            <Badge variant="outline" className="py-1.5 px-3 flex items-center space-x-2 w-full sm:w-auto justify-center bg-background shadow-sm">
+              {getCashFlowTrendIcon()}
+              <span className={`font-medium ${getCashFlowTrendColor()}`}>
+                {data?.financialPosition.cashFlowTrend === 'positive' ? 'Positive Cash Flow' : 
+                 data?.financialPosition.cashFlowTrend === 'negative' ? 'Negative Cash Flow' : 'Stable Cash Flow'}
+              </span>
+            </Badge>
+          )}
           <QuickExpenseDialog onSuccess={handleRefresh} />
         </div>
       </div>
@@ -347,40 +320,44 @@ export function DashboardOverview({ startDate, endDate }: DashboardOverviewProps
       <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
         <FinancialSummaryCard
           title="Net Worth"
-          value={financialPosition.netWorth}
+          value={data?.financialPosition.netWorth ?? 0}
           icon={<Wallet className="h-5 w-5 text-primary" />}
           description="Total assets minus liabilities"
           className="shadow-sm hover:shadow-md transition-all border-l-4 border-l-primary"
+          loading={loading}
         />
         <FinancialSummaryCard
           title="Monthly Income"
-          value={financialPosition.monthlyIncome}
-          change={{
-            amount: monthlyComparison.changes.incomeChange,
-            percentage: monthlyComparison.changes.incomeChangePercentage,
-            isPositive: monthlyComparison.changes.incomeChange >= 0,
-          }}
+          value={data?.financialPosition.monthlyIncome ?? 0}
+          change={data ? {
+            amount: data.monthlyComparison.changes.incomeChange,
+            percentage: data.monthlyComparison.changes.incomeChangePercentage,
+            isPositive: data.monthlyComparison.changes.incomeChange >= 0,
+          } : undefined}
           icon={<TrendingUp className="h-5 w-5 text-green-600" />}
           className="shadow-sm hover:shadow-md transition-all border-l-4 border-l-green-600"
+          loading={loading}
         />
         <FinancialSummaryCard
           title="Monthly Expenses"
-          value={financialPosition.monthlyExpenses}
-          change={{
-            amount: monthlyComparison.changes.expenseChange,
-            percentage: monthlyComparison.changes.expenseChangePercentage,
-            isPositive: monthlyComparison.changes.expenseChange <= 0,
-          }}
+          value={data?.financialPosition.monthlyExpenses ?? 0}
+          change={data ? {
+            amount: data.monthlyComparison.changes.expenseChange,
+            percentage: data.monthlyComparison.changes.expenseChangePercentage,
+            isPositive: data.monthlyComparison.changes.expenseChange <= 0,
+          } : undefined}
           icon={<TrendingDown className="h-5 w-5 text-red-600" />}
           className="shadow-sm hover:shadow-md transition-all border-l-4 border-l-red-600"
+          loading={loading}
         />
         <FinancialSummaryCard
           title="Savings Rate"
-          value={financialPosition.savingsRate}
+          value={data?.financialPosition.savingsRate ?? 0}
           icon={<PiggyBank className="h-5 w-5 text-blue-600" />}
           description="Percent of income saved"
           isPercentage={true}
           className="shadow-sm hover:shadow-md transition-all border-l-4 border-l-blue-600"
+          loading={loading}
         />
       </div>
 
@@ -392,7 +369,11 @@ export function DashboardOverview({ startDate, endDate }: DashboardOverviewProps
             <CardDescription>Income vs Expenses over time</CardDescription>
           </CardHeader>
           <CardContent>
-            <OverviewChart transactions={recentTransactions} />
+            {loading ? (
+              <Skeleton className="h-[250px] sm:h-[300px] w-full rounded-lg" />
+            ) : (
+              <OverviewChart transactions={data?.recentTransactions || []} />
+            )}
           </CardContent>
         </Card>
         
@@ -402,13 +383,16 @@ export function DashboardOverview({ startDate, endDate }: DashboardOverviewProps
             <CardDescription>This month vs last month</CardDescription>
           </CardHeader>
           <CardContent>
-            <DailySpendingChart data={dailySpending || { thisMonth: [], lastMonth: [], comparison: { averageThisMonth: 0, averageLastMonth: 0, percentageChange: 0, trend: 'stable' } }} />
+             {loading ? (
+               <Skeleton className="h-[250px] sm:h-[300px] w-full rounded-lg" />
+             ) : (
+               <DailySpendingChart data={data?.dailySpending || { thisMonth: [], lastMonth: [], comparison: { averageThisMonth: 0, averageLastMonth: 0, percentageChange: 0, trend: 'stable' } }} />
+             )}
           </CardContent>
         </Card>
       </div>
 
       {/* Health & Quick Stats Row - 4 columns on large screens */}
-      {/* Using a cleaner grid for secondary metrics */}
       <h3 className="text-xl font-semibold tracking-tight mt-8 mb-4">Financial Health</h3>
       <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
         <Card className="bg-gradient-to-br from-background to-muted/50">
@@ -419,13 +403,22 @@ export function DashboardOverview({ startDate, endDate }: DashboardOverviewProps
             </CardTitle>
           </CardHeader>
           <CardContent>
-             <div className="flex items-end justify-between">
-                <div className="text-3xl font-bold">{healthScore.overallScore.toFixed(0)}</div>
-                <Badge variant={healthScore.riskLevel === 'low' ? 'default' : healthScore.riskLevel === 'medium' ? 'secondary' : 'destructive'} className="mb-1">
-                  {healthScore.riskLevel} risk
-                </Badge>
-             </div>
-             <Progress value={healthScore.overallScore} className="h-2 mt-4" />
+            {loading ? (
+              <div className="space-y-4">
+                 <Skeleton className="h-8 w-16" />
+                 <Skeleton className="h-2 w-full" />
+              </div>
+            ) : (
+              <>
+                <div className="flex items-end justify-between">
+                    <div className="text-3xl font-bold">{data?.healthScore.overallScore.toFixed(0)}</div>
+                    <Badge variant={data?.healthScore.riskLevel === 'low' ? 'default' : data?.healthScore.riskLevel === 'medium' ? 'secondary' : 'destructive'} className="mb-1">
+                      {data?.healthScore.riskLevel} risk
+                    </Badge>
+                </div>
+                <Progress value={data?.healthScore.overallScore} className="h-2 mt-4" />
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -437,8 +430,17 @@ export function DashboardOverview({ startDate, endDate }: DashboardOverviewProps
             </CardTitle>
           </CardHeader>
           <CardContent>
-             <div className="text-3xl font-bold">{financialPosition.goalCompletionPercentage.toFixed(1)}%</div>
-             <p className="text-xs text-muted-foreground mt-1">{financialPosition.activeGoalsCount} active goals</p>
+             {loading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-8 w-24" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+             ) : (
+               <>
+                 <div className="text-3xl font-bold">{data?.financialPosition.goalCompletionPercentage.toFixed(1)}%</div>
+                 <p className="text-xs text-muted-foreground mt-1">{data?.financialPosition.activeGoalsCount} active goals</p>
+               </>
+             )}
           </CardContent>
         </Card>
 
@@ -450,8 +452,17 @@ export function DashboardOverview({ startDate, endDate }: DashboardOverviewProps
             </CardTitle>
           </CardHeader>
           <CardContent>
-             <div className="text-3xl font-bold">{financialPosition.budgetUtilizationPercentage.toFixed(1)}%</div>
-             <p className="text-xs text-muted-foreground mt-1">{financialPosition.overBudgetCount} over budget</p>
+             {loading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-8 w-24" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+             ) : (
+                <>
+                  <div className="text-3xl font-bold">{data?.financialPosition.budgetUtilizationPercentage.toFixed(1)}%</div>
+                  <p className="text-xs text-muted-foreground mt-1">{data?.financialPosition.overBudgetCount} over budget</p>
+                </>
+             )}
           </CardContent>
         </Card>
 
@@ -463,8 +474,17 @@ export function DashboardOverview({ startDate, endDate }: DashboardOverviewProps
             </CardTitle>
           </CardHeader>
           <CardContent>
-             <div className="text-3xl font-bold">{financialPosition.emergencyFundMonths.toFixed(1)}</div>
-             <p className="text-xs text-muted-foreground mt-1">months of expenses</p>
+             {loading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-8 w-24" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+             ) : (
+                <>
+                  <div className="text-3xl font-bold">{data?.financialPosition.emergencyFundMonths.toFixed(1)}</div>
+                  <p className="text-xs text-muted-foreground mt-1">months of expenses</p>
+                </>
+             )}
           </CardContent>
         </Card>
       </div>
@@ -506,39 +526,64 @@ export function DashboardOverview({ startDate, endDate }: DashboardOverviewProps
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
-                {recentTransactions.slice(0, 5).map((transaction) => (
-                  <div key={transaction.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium leading-none">{transaction.description}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {transaction.category || transaction.type} • {new Date(transaction.transactionDate).toLocaleDateString()}
-                      </p>
+              {loading ? (
+                <div className="space-y-6">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
+                       <div className="space-y-2">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-20" />
+                       </div>
+                       <Skeleton className="h-4 w-16" />
                     </div>
-                    <div className={`font-medium text-sm ${
-                      transaction.type === 'income' || transaction.type === 'receivable' ? 'text-green-600' : 'text-foreground'
-                    }`}>
-                      {transaction.type === 'income' || transaction.type === 'receivable' ? '+' : '-'}
-                      {formatCurrency(transaction.amount)}
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {data?.recentTransactions.slice(0, 5).map((transaction) => (
+                    <div key={transaction.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium leading-none">{transaction.description}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {transaction.category || transaction.type} • {new Date(transaction.transactionDate).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className={`font-medium text-sm ${
+                        transaction.type === 'income' || transaction.type === 'receivable' ? 'text-green-600' : 'text-foreground'
+                      }`}>
+                        {transaction.type === 'income' || transaction.type === 'receivable' ? '+' : '-'}
+                        {formatCurrency(transaction.amount)}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
       </div>
       
       {/* Alerts */}
-      {(overdue.debts.length > 0 || overdue.receivables.length > 0 || financialPosition.budgetAlertCount > 0) && (
+      {error && (
+         <Alert variant="destructive" className="mt-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+             {error}
+             <Button variant="outline" size="sm" onClick={fetchDashboardData} className="ml-2">Retry</Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {!loading && data && (data.overdue.debts.length > 0 || data.overdue.receivables.length > 0 || data.financialPosition.budgetAlertCount > 0) && (
         <Alert variant="destructive" className="mt-6 border-red-200 bg-red-50 dark:bg-red-950/20">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Action Required</AlertTitle>
           <AlertDescription>
             <div className="flex flex-col gap-1 mt-2">
-              {overdue.debts.length > 0 && <span>• {overdue.debts.length} overdue debts.</span>}
-              {overdue.receivables.length > 0 && <span>• {overdue.receivables.length} overdue receivables.</span>}
-              {financialPosition.budgetAlertCount > 0 && <span>• {financialPosition.budgetAlertCount} budget alerts.</span>}
+              {data.overdue.debts.length > 0 && <span>• {data.overdue.debts.length} overdue debts.</span>}
+              {data.overdue.receivables.length > 0 && <span>• {data.overdue.receivables.length} overdue receivables.</span>}
+              {data.financialPosition.budgetAlertCount > 0 && <span>• {data.financialPosition.budgetAlertCount} budget alerts.</span>}
             </div>
           </AlertDescription>
         </Alert>

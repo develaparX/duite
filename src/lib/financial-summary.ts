@@ -238,8 +238,19 @@ export class FinancialSummaryService {
       + goalsSummary.totalCurrentAmount;
 
     // Calculate financial health metrics
-    const monthlyIncome = recurringSummary.monthlyIncomeTotal + (transactionSummary.totalIncome / (periodDays / 30.44));
-    const monthlyExpenses = recurringSummary.monthlyExpenseTotal + (transactionSummary.totalExpenses / (periodDays / 30.44));
+    // Calculate financial health metrics
+    // If period is roughly a month (28-32 days), use actuals directly to avoid confusing scaling
+    const isRoughlyMonth = periodDays >= 28 && periodDays <= 32;
+    
+    // We strictly use actual transaction data for "Monthly Income/Expenses" to represent what happened in the period
+    // We do NOT add recurringSummary here to avoid double counting (since recurring transactions create real transactions)
+    const monthlyIncome = isRoughlyMonth 
+      ? transactionSummary.totalIncome 
+      : (transactionSummary.totalIncome / periodDays) * 30.44;
+
+    const monthlyExpenses = isRoughlyMonth
+      ? transactionSummary.totalExpenses
+      : (transactionSummary.totalExpenses / periodDays) * 30.44;
     
     const debtToIncomeRatio = monthlyIncome > 0 
       ? (transactionSummary.totalActiveDebts / (monthlyIncome * 12)) * 100 
@@ -429,11 +440,16 @@ export class FinancialSummaryService {
   /**
    * Get financial trends with enhanced metrics
    */
+  /**
+   * Get financial trends with enhanced metrics
+   */
   static async getFinancialTrends(userId: number, months: number = 6): Promise<FinancialTrends> {
-    const monthlyData: FinancialTrends['monthlyData'] = [];
     const now = new Date();
+    
+    // Generate array of month offsets [months-1, ..., 0] to fetch in parallel
+    const monthOffsets = Array.from({ length: months }, (_, i) => months - 1 - i);
 
-    for (let i = months - 1; i >= 0; i--) {
+    const monthlyDataPromises = monthOffsets.map(async (i) => {
       const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
 
@@ -443,7 +459,7 @@ export class FinancialSummaryService {
         monthEnd.toISOString().split('T')[0]
       );
 
-      monthlyData.push({
+      return {
         month: monthStart.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' }),
         income: position.monthlyIncome,
         expenses: position.monthlyExpenses,
@@ -453,8 +469,10 @@ export class FinancialSummaryService {
         budgetUtilization: position.budgetUtilizationPercentage,
         goalProgress: position.goalCompletionPercentage,
         cashFlow: position.projectedCashFlow,
-      });
-    }
+      };
+    });
+
+    const monthlyData = await Promise.all(monthlyDataPromises);
 
     // Calculate growth rates
     const calculateGrowthRate = (values: number[]): number => {
@@ -496,8 +514,8 @@ export class FinancialSummaryService {
   /**
    * Get real-time financial metrics
    */
-  static async getRealTimeMetrics(userId: number): Promise<RealTimeMetrics> {
-    const position = await this.calculateFinancialPosition(userId);
+  static async getRealTimeMetrics(userId: number, existingPosition?: FinancialPosition): Promise<RealTimeMetrics> {
+    const position = existingPosition || await this.calculateFinancialPosition(userId);
     
     // Calculate burn rate (daily expense rate)
     const burnRate = position.dailyAverageExpenses;

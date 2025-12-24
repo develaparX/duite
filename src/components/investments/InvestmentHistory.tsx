@@ -242,15 +242,15 @@ export function InvestmentHistory({
                   className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex items-start justify-between">
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-3">
+                    <div className="space-y-2 w-full">
+                      <div className="flex flex-wrap items-center gap-3">
                         <h4 className="font-semibold text-lg">{entry.accountName}</h4>
                         <span className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full">
                           {formatAccountTypeName(entry.accountType || 'general')}
                         </span>
                       </div>
                       
-                      <div className="flex items-center space-x-4">
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                         <div>
                           <span className="text-sm text-gray-600">Balance: </span>
                           <span className="font-semibold text-lg">

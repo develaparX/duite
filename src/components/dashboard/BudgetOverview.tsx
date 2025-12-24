@@ -44,6 +44,8 @@ interface BudgetOverviewProps {
   onCreateBudget?: () => void;
 }
 
+import { Skeleton } from '@/components/ui/skeleton';
+
 export function BudgetOverview({ onCreateBudget }: BudgetOverviewProps) {
   const { token } = useAuth();
   const [budgets, setBudgets] = useState<BudgetPerformance[]>([]);
@@ -142,7 +144,6 @@ export function BudgetOverview({ onCreateBudget }: BudgetOverviewProps) {
     if (budget.shouldAlert) return <Clock className="h-4 w-4 text-yellow-600" />;
     return <CheckCircle className="h-4 w-4 text-green-600" />;
   };
-
   if (loading) {
     return (
       <Card>
@@ -152,7 +153,7 @@ export function BudgetOverview({ onCreateBudget }: BudgetOverviewProps) {
         <CardContent>
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-16 bg-muted animate-pulse rounded" />
+              <Skeleton key={i} className="h-16" />
             ))}
           </div>
         </CardContent>

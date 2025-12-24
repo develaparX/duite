@@ -343,16 +343,20 @@ export function ExpenseManager({ authToken }: ExpenseManagerProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h2 className="text-2xl font-bold">Expense Management</h2>
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <Button
             variant={activeTab === 'monthly' ? 'default' : 'outline'}
             onClick={() => setActiveTab('monthly')}
+            className="flex-1 sm:flex-initial"
           >
             Monthly View
           </Button>
-          <Button onClick={() => setShowAddForm(true)}>
+          <Button 
+            onClick={() => setShowAddForm(true)}
+            className="flex-1 sm:flex-initial"
+          >
             Add Expense
           </Button>
         </div>

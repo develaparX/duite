@@ -319,10 +319,10 @@ export function InvestmentManager({ userId, authToken }: InvestmentManagerProps)
                 {summary.accounts.map((account) => (
                   <div
                     key={account.accountName}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors gap-4"
                   >
-                    <div className="space-y-1">
-                      <div className="flex items-center space-x-3">
+                    <div className="space-y-1 w-full">
+                      <div className="flex flex-wrap items-center gap-3">
                         <h4 className="font-semibold">{account.accountName}</h4>
                         <span className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full">
                           {formatAccountTypeName(account.accountType)}
@@ -332,7 +332,7 @@ export function InvestmentManager({ userId, authToken }: InvestmentManagerProps)
                         Last updated: {formatDate(account.lastUpdated)}
                       </p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-left sm:text-right w-full sm:w-auto ml-0">
                       <div className="text-lg font-semibold">
                         {formatCurrency(account.currentBalance)}
                       </div>
@@ -391,28 +391,38 @@ export function InvestmentManager({ userId, authToken }: InvestmentManagerProps)
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h2 className="text-2xl font-bold">Investment Portfolio</h2>
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <Button
             variant={activeTab === 'overview' ? 'default' : 'outline'}
             onClick={() => setActiveTab('overview')}
+            className="flex-1 sm:flex-initial"
+            size="sm"
           >
             Overview
           </Button>
           <Button
             variant={activeTab === 'history' ? 'default' : 'outline'}
             onClick={() => setActiveTab('history')}
+            className="flex-1 sm:flex-initial"
+            size="sm"
           >
             History
           </Button>
           <Button
             variant={activeTab === 'performance' ? 'default' : 'outline'}
             onClick={() => setActiveTab('performance')}
+            className="flex-1 sm:flex-initial"
+            size="sm"
           >
             Performance
           </Button>
-          <Button onClick={() => setActiveTab('add')}>
+          <Button 
+            onClick={() => setActiveTab('add')}
+            className="flex-1 sm:flex-initial"
+            size="sm"
+          >
             Record Balance
           </Button>
         </div>

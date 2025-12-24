@@ -166,17 +166,17 @@ function DebtsReceivablesPage() {
       {summary && <DebtReceivableSummary summary={summary} overdue={overdue || undefined} />}
 
       <Tabs defaultValue="debts" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <TabsList>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <TabsList className="w-full sm:w-auto grid grid-cols-2 sm:flex">
               <TabsTrigger value="debts">Debts</TabsTrigger>
               <TabsTrigger value="receivables">Receivables</TabsTrigger>
             </TabsList>
             
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full sm:w-auto">
               <AddTransactionDialog 
                  type="debt" 
                  trigger={
-                   <Button disabled={isLoading}>
+                   <Button disabled={isLoading} className="flex-1 sm:flex-initial">
                     <Plus className="mr-2 h-4 w-4" />
                     Add Debt
                    </Button>
@@ -186,7 +186,7 @@ function DebtsReceivablesPage() {
               <AddTransactionDialog 
                  type="receivable" 
                  trigger={
-                   <Button disabled={isLoading}>
+                   <Button disabled={isLoading} className="flex-1 sm:flex-initial">
                     <Plus className="mr-2 h-4 w-4" />
                     Add Receivable
                    </Button>

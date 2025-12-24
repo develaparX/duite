@@ -19,6 +19,8 @@ interface FinancialSummaryCardProps {
   isPercentage?: boolean;
 }
 
+import { Skeleton } from '@/components/ui/skeleton';
+
 export function FinancialSummaryCard({
   title,
   description,
@@ -48,12 +50,12 @@ export function FinancialSummaryCard({
     return (
       <Card className={cn(onClick ? 'cursor-pointer hover:shadow-md transition-shadow' : '', className)}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <div className="h-4 w-24 bg-muted animate-pulse rounded" />
-          <div className="h-4 w-4 bg-muted animate-pulse rounded" />
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-4 w-4" />
         </CardHeader>
         <CardContent>
-          <div className="h-8 w-full bg-muted animate-pulse rounded mb-2" />
-          <div className="h-4 w-20 bg-muted animate-pulse rounded" />
+          <Skeleton className="h-8 w-full mb-2" />
+          <Skeleton className="h-4 w-20" />
         </CardContent>
       </Card>
     );

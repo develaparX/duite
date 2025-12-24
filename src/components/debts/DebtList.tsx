@@ -99,11 +99,11 @@ export function DebtList({
           {debts.map((debt) => (
             <div
               key={debt.id}
-              className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+              className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors gap-4"
             >
-              <div className="flex-1 space-y-2">
-                <div className="flex items-center gap-3">
-                  <h3 className="font-medium">{debt.description}</h3>
+              <div className="flex-1 space-y-2 w-full">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="font-medium mr-1">{debt.description}</h3>
                   <span
                     className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(
                       debt.status || 'active'
@@ -118,7 +118,7 @@ export function DebtList({
                   )}
                 </div>
                 
-                <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-muted-foreground">
                   <span>
                     <strong>Amount:</strong> {formatCurrency(debt.amount)}
                   </span>
@@ -136,7 +136,7 @@ export function DebtList({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end sm:justify-start">
                 {onEdit && (
                   <Button
                     variant="outline"

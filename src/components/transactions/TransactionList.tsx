@@ -200,10 +200,10 @@ export function TransactionList({
               {transactions.map((transaction) => (
                 <div
                   key={transaction.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 gap-4"
                 >
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center gap-2">
+                  <div className="flex-1 space-y-1 w-full">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span
                         className={`px-2 py-1 text-xs font-medium rounded-full ${getTransactionTypeColor(
                           transaction.type
@@ -220,7 +220,7 @@ export function TransactionList({
                       </span>
                     </div>
                     <h3 className="font-medium">{transaction.description}</h3>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                       <span>{formatDate(transaction.transactionDate)}</span>
                       {transaction.category && <span>• {transaction.category}</span>}
                       {transaction.relatedParty && <span>• {transaction.relatedParty}</span>}
@@ -229,7 +229,7 @@ export function TransactionList({
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
                     <span className="text-lg font-semibold">
                       {formatAmount(transaction.amount)}
                     </span>
