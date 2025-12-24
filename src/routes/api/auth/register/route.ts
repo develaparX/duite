@@ -132,6 +132,7 @@ export const Route = createFileRoute('/api/auth/register')({
               error: {
                 code: 'INTERNAL_ERROR',
                 message: 'An internal server error occurred',
+                debug: error instanceof Error ? error.message : String(error),
                 details: {
                   timestamp: new Date().toISOString(),
                 },
