@@ -317,9 +317,9 @@ export function IncomeManager({ userId, authToken }: IncomeManagerProps) {
   if (showAddForm) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <h2 className="text-2xl font-bold">Add Income</h2>
-          <Button variant="outline" onClick={() => setShowAddForm(false)}>
+          <Button variant="outline" onClick={() => setShowAddForm(false)} className="w-full sm:w-auto">
             Back to Income Management
           </Button>
         </div>
@@ -337,9 +337,9 @@ export function IncomeManager({ userId, authToken }: IncomeManagerProps) {
   if (editingTransaction) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <h2 className="text-2xl font-bold">Edit Income</h2>
-          <Button variant="outline" onClick={() => setEditingTransaction(null)}>
+          <Button variant="outline" onClick={() => setEditingTransaction(null)} className="w-full sm:w-auto">
             Back to Income Management
           </Button>
         </div>
@@ -358,22 +358,31 @@ export function IncomeManager({ userId, authToken }: IncomeManagerProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h2 className="text-2xl font-bold">Income Management</h2>
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <Button
             variant={activeTab === 'monthly' ? 'default' : 'outline'}
             onClick={() => setActiveTab('monthly')}
+            className="flex-1 sm:flex-initial"
+            size="sm"
           >
             Monthly View
           </Button>
           <Button
             variant={activeTab === 'trends' ? 'default' : 'outline'}
             onClick={() => setActiveTab('trends')}
+            className="flex-1 sm:flex-initial"
+            size="sm"
           >
             Trends
           </Button>
-          <Button onClick={() => setShowAddForm(true)}>
+          <Button 
+            onClick={() => setShowAddForm(true)}
+            className="flex-1 sm:flex-initial"
+            size="sm"
+          >
             Add Income
           </Button>
         </div>
@@ -486,7 +495,7 @@ export function IncomeManager({ userId, authToken }: IncomeManagerProps) {
                   <>
                     {/* Total Income */}
                     <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
                         <span className="text-lg font-medium text-green-800">Total Income</span>
                         <span className="text-2xl font-bold text-green-900">
                           {formatCurrency(monthlyData.totalAmount)}
@@ -500,8 +509,8 @@ export function IncomeManager({ userId, authToken }: IncomeManagerProps) {
                         <h4 className="font-medium">Income by Source</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           {Object.entries(monthlyData.categorizedTotals).map(([category, amount]) => (
-                            <div key={category} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                              <span className="font-medium">{category}</span>
+                            <div key={category} className="flex flex-wrap items-center justify-between p-3 bg-gray-50 rounded-lg gap-2">
+                              <span className="font-medium mr-1">{category}</span>
                               <span className="font-semibold">{formatCurrency(amount)}</span>
                             </div>
                           ))}

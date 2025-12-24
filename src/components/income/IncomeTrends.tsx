@@ -172,9 +172,10 @@ export function IncomeTrends({ authToken }: IncomeTrendsProps) {
   return (
     <div className="space-y-6">
       {/* Header and Controls */}
-      <div className="flex items-center justify-between">
+      {/* Header and Controls */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h3 className="text-xl font-semibold">Income Trends</h3>
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
           <div className="flex items-center space-x-2">
             <Label htmlFor="months-back">Period:</Label>
             <Select
@@ -193,7 +194,7 @@ export function IncomeTrends({ authToken }: IncomeTrendsProps) {
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={loadIncomeTrends} disabled={isLoading}>
+          <Button onClick={loadIncomeTrends} disabled={isLoading} className="flex-1 sm:flex-none">
             {isLoading ? 'Loading...' : 'Refresh'}
           </Button>
         </div>
