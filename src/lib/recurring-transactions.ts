@@ -70,7 +70,7 @@ export function validateRecurringTransactionData(data: Partial<NewRecurringTrans
  * Recurring transaction filtering and sorting types
  */
 export interface RecurringTransactionFilters {
-  userId: number;
+  userId: string;
   type?: 'income' | 'expense' | 'debt' | 'receivable';
   frequency?: 'daily' | 'weekly' | 'monthly' | 'yearly';
   category?: string;
@@ -158,7 +158,7 @@ export class RecurringTransactionService {
   /**
    * Get recurring transaction by ID
    */
-  static async getById(id: number, userId: number): Promise<RecurringTransaction | null> {
+  static async getById(id: number, userId: string): Promise<RecurringTransaction | null> {
     const [recurringTransaction] = await db
       .select()
       .from(recurringTransactions)
@@ -171,7 +171,7 @@ export class RecurringTransactionService {
   /**
    * Update recurring transaction
    */
-  static async update(id: number, userId: number, data: Partial<NewRecurringTransaction>): Promise<RecurringTransaction> {
+  static async update(id: number, userId: string, data: Partial<NewRecurringTransaction>): Promise<RecurringTransaction> {
     const validation = validateRecurringTransactionData(data);
     if (!validation.isValid) {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
@@ -196,7 +196,7 @@ export class RecurringTransactionService {
   /**
    * Delete recurring transaction
    */
-  static async delete(id: number, userId: number): Promise<void> {
+  static async delete(id: number, userId: string): Promise<void> {
     const result = await db
       .delete(recurringTransactions)
       .where(and(eq(recurringTransactions.id, id), eq(recurringTransactions.userId, userId)));
@@ -292,7 +292,7 @@ export class RecurringTransactionService {
   /**
    * Get due recurring transactions
    */
-  static async getDueTransactions(userId: number, daysAhead: number = 0): Promise<RecurringTransactionDue[]> {
+  static async getDueTransactions(userId: string, daysAhead: number = 0): Promise<RecurringTransactionDue[]> {
     const today = new Date();
     const checkDate = new Date(today);
     checkDate.setDate(checkDate.getDate() + daysAhead);
@@ -326,7 +326,7 @@ export class RecurringTransactionService {
   /**
    * Process due recurring transactions (create actual transactions)
    */
-  static async processDueTransactions(userId: number): Promise<{ created: number; errors: string[] }> {
+  static async processDueTransactions(userId: string): Promise<{ created: number; errors: string[] }> {
     const dueTransactions = await this.getDueTransactions(userId, 0);
     let created = 0;
     const errors: string[] = [];
@@ -390,14 +390,14 @@ export class RecurringTransactionService {
   /**
    * Get upcoming recurring transactions (next 30 days)
    */
-  static async getUpcoming(userId: number, days: number = 30): Promise<RecurringTransactionDue[]> {
+  static async getUpcoming(userId: string, days: number = 30): Promise<RecurringTransactionDue[]> {
     return await this.getDueTransactions(userId, days);
   }
 
   /**
    * Pause/Resume recurring transaction
    */
-  static async toggleActive(id: number, userId: number): Promise<RecurringTransaction> {
+  static async toggleActive(id: number, userId: string): Promise<RecurringTransaction> {
     const recurringTransaction = await this.getById(id, userId);
     if (!recurringTransaction) {
       throw new Error('Recurring transaction not found');
@@ -411,7 +411,7 @@ export class RecurringTransactionService {
   /**
    * Skip next occurrence
    */
-  static async skipNext(id: number, userId: number): Promise<RecurringTransaction> {
+  static async skipNext(id: number, userId: string): Promise<RecurringTransaction> {
     const recurringTransaction = await this.getById(id, userId);
     if (!recurringTransaction) {
       throw new Error('Recurring transaction not found');
@@ -432,7 +432,7 @@ export class RecurringTransactionService {
   /**
    * Get recurring transaction summary
    */
-  static async getSummary(userId: number): Promise<{
+  static async getSummary(userId: string): Promise<{
     totalActive: number;
     totalInactive: number;
     monthlyIncomeTotal: number;

@@ -42,7 +42,7 @@ export function validateInvestmentData(data: Partial<NewInvestmentBalance>): {
  * Investment balance filtering and sorting types
  */
 export interface InvestmentFilters {
-  userId: number;
+  userId: string;
   accountName?: string;
   accountType?: string;
   startDate?: string;
@@ -109,7 +109,7 @@ export class InvestmentService {
   /**
    * Get investment balance by ID
    */
-  static async getById(id: number, userId: number): Promise<InvestmentBalance | null> {
+  static async getById(id: number, userId: string): Promise<InvestmentBalance | null> {
     const [balance] = await db
       .select()
       .from(investmentBalances)
@@ -124,7 +124,7 @@ export class InvestmentService {
    */
   static async update(
     id: number,
-    userId: number,
+    userId: string,
     data: Partial<NewInvestmentBalance>
   ): Promise<InvestmentBalance | null> {
     const validation = validateInvestmentData({ ...data, userId });
@@ -144,7 +144,7 @@ export class InvestmentService {
   /**
    * Delete investment balance record
    */
-  static async delete(id: number, userId: number): Promise<boolean> {
+  static async delete(id: number, userId: string): Promise<boolean> {
     const result = await db
       .delete(investmentBalances)
       .where(and(eq(investmentBalances.id, id), eq(investmentBalances.userId, userId)))
@@ -202,7 +202,7 @@ export class InvestmentService {
    * Get balance history for a specific account
    */
   static async getAccountHistory(
-    userId: number,
+    userId: string,
     accountName: string,
     limit: number = 50
   ): Promise<InvestmentBalance[]> {
@@ -216,7 +216,7 @@ export class InvestmentService {
   /**
    * Get all unique account names for a user
    */
-  static async getAccountNames(userId: number): Promise<string[]> {
+  static async getAccountNames(userId: string): Promise<string[]> {
     const balances = await db
       .selectDistinct({ accountName: investmentBalances.accountName })
       .from(investmentBalances)
@@ -229,7 +229,7 @@ export class InvestmentService {
   /**
    * Get all unique account types for a user
    */
-  static async getAccountTypes(userId: number): Promise<string[]> {
+  static async getAccountTypes(userId: string): Promise<string[]> {
     const balances = await db
       .selectDistinct({ accountType: investmentBalances.accountType })
       .from(investmentBalances)
@@ -242,7 +242,7 @@ export class InvestmentService {
   /**
    * Get current balance for each account (most recent record)
    */
-  static async getCurrentBalances(userId: number): Promise<InvestmentBalance[]> {
+  static async getCurrentBalances(userId: string): Promise<InvestmentBalance[]> {
     const accountNames = await this.getAccountNames(userId);
     const currentBalances: InvestmentBalance[] = [];
 
@@ -265,7 +265,7 @@ export class InvestmentService {
    * Calculate investment performance for an account
    */
   static async calculateAccountPerformance(
-    userId: number,
+    userId: string,
     accountName: string
   ): Promise<InvestmentPerformance | null> {
     const history = await this.getAccountHistory(userId, accountName, 2);
@@ -296,7 +296,7 @@ export class InvestmentService {
   /**
    * Get investment summary for a user
    */
-  static async getInvestmentSummary(userId: number): Promise<InvestmentSummary> {
+  static async getInvestmentSummary(userId: string): Promise<InvestmentSummary> {
     const currentBalances = await this.getCurrentBalances(userId);
     
     let totalCurrentBalance = 0;
@@ -345,7 +345,7 @@ export class InvestmentService {
   /**
    * Get investment performance for all accounts
    */
-  static async getAllAccountPerformance(userId: number): Promise<InvestmentPerformance[]> {
+  static async getAllAccountPerformance(userId: string): Promise<InvestmentPerformance[]> {
     const accountNames = await this.getAccountNames(userId);
     const performances: InvestmentPerformance[] = [];
 
@@ -363,7 +363,7 @@ export class InvestmentService {
    * Get balance history for date range
    */
   static async getBalanceHistory(
-    userId: number,
+    userId: string,
     startDate?: string,
     endDate?: string,
     accountName?: string

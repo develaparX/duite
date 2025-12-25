@@ -30,7 +30,7 @@ export class IncomeService {
    * Get monthly income report with source breakdown
    */
   static async getMonthlyIncomeReport(
-    userId: number,
+    userId: string,
     year: number,
     month: number,
     sourceFilter?: string
@@ -102,7 +102,7 @@ export class IncomeService {
    * Get income by source for a date range
    */
   static async getIncomeBySource(
-    userId: number,
+    userId: string,
     startDate?: string,
     endDate?: string
   ): Promise<IncomeSource[]> {
@@ -149,7 +149,7 @@ export class IncomeService {
   /**
    * Get available income sources for a user
    */
-  static async getAvailableIncomeSources(userId: number): Promise<string[]> {
+  static async getAvailableIncomeSources(userId: string): Promise<string[]> {
     const filters: TransactionFilters = {
       userId,
       type: 'income',
@@ -176,7 +176,7 @@ export class IncomeService {
    * Get income trends over multiple months
    */
   static async getIncometrends(
-    userId: number,
+    userId: string,
     monthsBack: number = 12
   ): Promise<{ month: string; year: number; totalIncome: number }[]> {
     const trends = [];

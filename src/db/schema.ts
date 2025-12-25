@@ -1,9 +1,9 @@
-import { pgTable, serial, varchar, text, timestamp, decimal, date, integer, check, boolean, foreignKey } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, timestamp, decimal, date, integer, check, boolean, foreignKey } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 // Users table
 export const users = pgTable('users', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').primaryKey().default(sql`uuidv7()`),
   email: varchar('email', { length: 255 }).notNull().unique(),
   passwordHash: varchar('password_hash', { length: 255 }).notNull(),
   fullName: varchar('full_name', { length: 255 }).notNull(),
@@ -15,11 +15,11 @@ export const users = pgTable('users', {
 
 // Categories table (Enhanced with hierarchical support)
 export const categories = pgTable('categories', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  id: uuid('id').primaryKey().default(sql`uuidv7()`),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   name: varchar('name', { length: 100 }).notNull(),
   type: varchar('type', { length: 20 }).notNull(),
-  parentId: integer('parent_id'),
+  parentId: uuid('parent_id'),
   color: varchar('color', { length: 7 }).default('#6B7280'),
   icon: varchar('icon', { length: 50 }),
   isActive: boolean('is_active').default(true),
@@ -35,19 +35,19 @@ export const categories = pgTable('categories', {
 
 // Transactions table (Enhanced with multi-currency and recurring support)
 export const transactions = pgTable('transactions', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  id: uuid('id').primaryKey().default(sql`uuidv7()`),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   type: varchar('type', { length: 20 }).notNull(),
   amount: decimal('amount', { precision: 12, scale: 2 }).notNull(),
   currency: varchar('currency', { length: 3 }).default('IDR'),
   description: text('description').notNull(),
   category: varchar('category', { length: 100 }),
-  categoryId: integer('category_id').references(() => categories.id),
+  categoryId: uuid('category_id').references(() => categories.id),
   transactionDate: date('transaction_date').notNull(),
   status: varchar('status', { length: 20 }).default('active'),
   relatedParty: varchar('related_party', { length: 255 }),
   dueDate: date('due_date'),
-  recurringId: integer('recurring_id').references(() => recurringTransactions.id),
+  recurringId: uuid('recurring_id').references(() => recurringTransactions.id),
   tags: text('tags'), // JSON array of tags
   notes: text('notes'),
   attachments: text('attachments'), // JSON array of file paths
@@ -61,14 +61,14 @@ export const transactions = pgTable('transactions', {
 
 // Recurring transactions table
 export const recurringTransactions = pgTable('recurring_transactions', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  id: uuid('id').primaryKey().default(sql`uuidv7()`),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   type: varchar('type', { length: 20 }).notNull(),
   amount: decimal('amount', { precision: 12, scale: 2 }).notNull(),
   currency: varchar('currency', { length: 3 }).default('IDR'),
   description: text('description').notNull(),
   category: varchar('category', { length: 100 }),
-  categoryId: integer('category_id').references(() => categories.id),
+  categoryId: uuid('category_id').references(() => categories.id),
   frequency: varchar('frequency', { length: 20 }).notNull(), // daily, weekly, monthly, yearly
   intervalValue: integer('interval_value').default(1), // every X frequency
   startDate: date('start_date').notNull(),
@@ -88,11 +88,11 @@ export const recurringTransactions = pgTable('recurring_transactions', {
 
 // Budgets table
 export const budgets = pgTable('budgets', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  id: uuid('id').primaryKey().default(sql`uuidv7()`),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   name: varchar('name', { length: 255 }).notNull(),
   category: varchar('category', { length: 100 }),
-  categoryId: integer('category_id').references(() => categories.id),
+  categoryId: uuid('category_id').references(() => categories.id),
   amount: decimal('amount', { precision: 12, scale: 2 }).notNull(),
   currency: varchar('currency', { length: 3 }).default('IDR'),
   period: varchar('period', { length: 20 }).notNull(), // monthly, yearly, weekly
@@ -111,8 +111,8 @@ export const budgets = pgTable('budgets', {
 
 // Financial goals table
 export const financialGoals = pgTable('financial_goals', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  id: uuid('id').primaryKey().default(sql`uuidv7()`),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   name: varchar('name', { length: 255 }).notNull(),
   description: text('description'),
   targetAmount: decimal('target_amount', { precision: 15, scale: 2 }).notNull(),
@@ -135,14 +135,14 @@ export const financialGoals = pgTable('financial_goals', {
 
 // Savings accounts table
 export const savingsAccounts = pgTable('savings_accounts', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  id: uuid('id').primaryKey().default(sql`uuidv7()`),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   name: varchar('name', { length: 255 }).notNull(),
   accountType: varchar('account_type', { length: 50 }).notNull(), // savings, checking, emergency, goal-based
   balance: decimal('balance', { precision: 15, scale: 2 }).default('0.00'),
   currency: varchar('currency', { length: 3 }).default('IDR'),
   interestRate: decimal('interest_rate', { precision: 5, scale: 4 }).default('0.0000'),
-  goalId: integer('goal_id').references(() => financialGoals.id),
+  goalId: uuid('goal_id').references(() => financialGoals.id),
   isActive: boolean('is_active').default(true),
   notes: text('notes'),
   createdAt: timestamp('created_at').defaultNow(),
@@ -154,8 +154,8 @@ export const savingsAccounts = pgTable('savings_accounts', {
 
 // Investment balances table (Enhanced)
 export const investmentBalances = pgTable('investment_balances', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  id: uuid('id').primaryKey().default(sql`uuidv7()`),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   accountName: varchar('account_name', { length: 255 }).notNull(),
   balance: decimal('balance', { precision: 15, scale: 2 }).notNull(),
   currency: varchar('currency', { length: 3 }).default('IDR'),
@@ -168,8 +168,8 @@ export const investmentBalances = pgTable('investment_balances', {
 
 // Bill reminders table
 export const billReminders = pgTable('bill_reminders', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  id: uuid('id').primaryKey().default(sql`uuidv7()`),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   name: varchar('name', { length: 255 }).notNull(),
   amount: decimal('amount', { precision: 12, scale: 2 }).notNull(),
   currency: varchar('currency', { length: 3 }).default('IDR'),
@@ -193,14 +193,14 @@ export const billReminders = pgTable('bill_reminders', {
 
 // Notifications table
 export const notifications = pgTable('notifications', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  id: uuid('id').primaryKey().default(sql`uuidv7()`),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   type: varchar('type', { length: 50 }).notNull(), // budget_alert, bill_reminder, goal_milestone, etc.
   title: varchar('title', { length: 255 }).notNull(),
   message: text('message').notNull(),
   isRead: boolean('is_read').default(false),
   priority: varchar('priority', { length: 20 }).default('medium'),
-  relatedId: integer('related_id'), // ID of related entity (budget, bill, goal, etc.)
+  relatedId: uuid('related_id'), // ID of related entity (budget, bill, goal, etc.)
   relatedType: varchar('related_type', { length: 50 }), // budget, bill, goal, etc.
   scheduledFor: timestamp('scheduled_for'),
   createdAt: timestamp('created_at').defaultNow(),
@@ -210,8 +210,8 @@ export const notifications = pgTable('notifications', {
 
 // Cash flow projections table
 export const cashFlowProjections = pgTable('cash_flow_projections', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  id: uuid('id').primaryKey().default(sql`uuidv7()`),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   projectionDate: date('projection_date').notNull(),
   projectedIncome: decimal('projected_income', { precision: 15, scale: 2 }).default('0.00'),
   projectedExpenses: decimal('projected_expenses', { precision: 15, scale: 2 }).default('0.00'),

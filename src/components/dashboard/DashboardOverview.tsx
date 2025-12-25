@@ -575,15 +575,15 @@ export function DashboardOverview({ startDate, endDate }: DashboardOverviewProps
         </Alert>
       )}
 
-      {!loading && data && (data.overdue.debts.length > 0 || data.overdue.receivables.length > 0 || data.financialPosition.budgetAlertCount > 0) && (
+      {!loading && data && ((data.overdue?.debts?.length || 0) > 0 || (data.overdue?.receivables?.length || 0) > 0 || (data.financialPosition?.budgetAlertCount || 0) > 0) && (
         <Alert variant="destructive" className="mt-6 border-red-200 bg-red-50 dark:bg-red-950/20">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Action Required</AlertTitle>
           <AlertDescription>
             <div className="flex flex-col gap-1 mt-2">
-              {data.overdue.debts.length > 0 && <span>• {data.overdue.debts.length} overdue debts.</span>}
-              {data.overdue.receivables.length > 0 && <span>• {data.overdue.receivables.length} overdue receivables.</span>}
-              {data.financialPosition.budgetAlertCount > 0 && <span>• {data.financialPosition.budgetAlertCount} budget alerts.</span>}
+              {(data.overdue?.debts?.length || 0) > 0 && <span>• {data.overdue.debts.length} overdue debts.</span>}
+              {(data.overdue?.receivables?.length || 0) > 0 && <span>• {data.overdue.receivables.length} overdue receivables.</span>}
+              {(data.financialPosition?.budgetAlertCount || 0) > 0 && <span>• {data.financialPosition.budgetAlertCount} budget alerts.</span>}
             </div>
           </AlertDescription>
         </Alert>

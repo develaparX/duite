@@ -62,7 +62,7 @@ export function validateBudgetData(data: Partial<NewBudget>): {
  * Budget filtering and sorting types
  */
 export interface BudgetFilters {
-  userId: number;
+  userId: string;
   period?: 'weekly' | 'monthly' | 'yearly';
   category?: string;
   isActive?: boolean;
@@ -135,7 +135,7 @@ export class BudgetService {
   /**
    * Get budget by ID
    */
-  static async getById(id: number, userId: number): Promise<Budget | null> {
+  static async getById(id: number, userId: string): Promise<Budget | null> {
     const [budget] = await db
       .select()
       .from(budgets)
@@ -148,7 +148,7 @@ export class BudgetService {
   /**
    * Update budget
    */
-  static async update(id: number, userId: number, data: Partial<NewBudget>): Promise<Budget> {
+  static async update(id: number, userId: string, data: Partial<NewBudget>): Promise<Budget> {
     const validation = validateBudgetData(data);
     if (!validation.isValid) {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
@@ -173,7 +173,7 @@ export class BudgetService {
   /**
    * Delete budget
    */
-  static async delete(id: number, userId: number): Promise<void> {
+  static async delete(id: number, userId: string): Promise<void> {
     const result = await db
       .delete(budgets)
       .where(and(eq(budgets.id, id), eq(budgets.userId, userId)));
@@ -264,7 +264,7 @@ export class BudgetService {
   /**
    * Get budget performance with spending analysis
    */
-  static async getBudgetPerformance(budgetId: number, userId: number): Promise<BudgetPerformance | null> {
+  static async getBudgetPerformance(budgetId: number, userId: string): Promise<BudgetPerformance | null> {
     const budget = await this.getById(budgetId, userId);
     if (!budget) {
       return null;
@@ -326,7 +326,7 @@ export class BudgetService {
   /**
    * Get budget summary for user
    */
-  static async getBudgetSummary(userId: number, period?: string): Promise<BudgetSummary> {
+  static async getBudgetSummary(userId: string, period?: string): Promise<BudgetSummary> {
     let budgetQuery = db.select().from(budgets).where(eq(budgets.userId, userId));
     
     if (period) {
@@ -378,7 +378,7 @@ export class BudgetService {
   /**
    * Get current month budgets for user
    */
-  static async getCurrentMonthBudgets(userId: number): Promise<BudgetPerformance[]> {
+  static async getCurrentMonthBudgets(userId: string): Promise<BudgetPerformance[]> {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -409,7 +409,7 @@ export class BudgetService {
   /**
    * Check for budget alerts
    */
-  static async checkBudgetAlerts(userId: number): Promise<BudgetPerformance[]> {
+  static async checkBudgetAlerts(userId: string): Promise<BudgetPerformance[]> {
     const currentBudgets = await this.getCurrentMonthBudgets(userId);
     return currentBudgets.filter(budget => budget.shouldAlert);
   }

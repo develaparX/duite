@@ -62,7 +62,7 @@ export function validateGoalData(data: Partial<NewFinancialGoal>): {
  * Financial goal filtering and sorting types
  */
 export interface FinancialGoalFilters {
-  userId: number;
+  userId: string;
   category?: string;
   priority?: 'low' | 'medium' | 'high';
   isCompleted?: boolean;
@@ -148,7 +148,7 @@ export class FinancialGoalService {
   /**
    * Get financial goal by ID
    */
-  static async getById(id: number, userId: number): Promise<FinancialGoal | null> {
+  static async getById(id: number, userId: string): Promise<FinancialGoal | null> {
     const [goal] = await db
       .select()
       .from(financialGoals)
@@ -161,7 +161,7 @@ export class FinancialGoalService {
   /**
    * Update financial goal
    */
-  static async update(id: number, userId: number, data: Partial<NewFinancialGoal>): Promise<FinancialGoal> {
+  static async update(id: number, userId: string, data: Partial<NewFinancialGoal>): Promise<FinancialGoal> {
     const validation = validateGoalData(data);
     if (!validation.isValid) {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
@@ -193,7 +193,7 @@ export class FinancialGoalService {
   /**
    * Delete financial goal
    */
-  static async delete(id: number, userId: number): Promise<void> {
+  static async delete(id: number, userId: string): Promise<void> {
     const result = await db
       .delete(financialGoals)
       .where(and(eq(financialGoals.id, id), eq(financialGoals.userId, userId)));
@@ -206,7 +206,7 @@ export class FinancialGoalService {
   /**
    * Add contribution to goal
    */
-  static async addContribution(id: number, userId: number, amount: number): Promise<FinancialGoal> {
+  static async addContribution(id: number, userId: string, amount: number): Promise<FinancialGoal> {
     if (amount <= 0) {
       throw new Error('Contribution amount must be positive');
     }
@@ -298,7 +298,7 @@ export class FinancialGoalService {
   /**
    * Get goal progress analysis
    */
-  static async getGoalProgress(goalId: number, userId: number): Promise<GoalProgress | null> {
+  static async getGoalProgress(goalId: number, userId: string): Promise<GoalProgress | null> {
     const goal = await this.getById(goalId, userId);
     if (!goal) {
       return null;
@@ -356,7 +356,7 @@ export class FinancialGoalService {
   /**
    * Get goals summary for user
    */
-  static async getGoalsSummary(userId: number): Promise<GoalSummary> {
+  static async getGoalsSummary(userId: string): Promise<GoalSummary> {
     const allGoals = await db
       .select()
       .from(financialGoals)
@@ -406,7 +406,7 @@ export class FinancialGoalService {
   /**
    * Get goal recommendations
    */
-  static async getGoalRecommendations(userId: number): Promise<GoalRecommendation[]> {
+  static async getGoalRecommendations(userId: string): Promise<GoalRecommendation[]> {
     const activeGoals = await this.getFiltered({ userId, isCompleted: false });
     const recommendations: GoalRecommendation[] = [];
 
@@ -470,7 +470,7 @@ export class FinancialGoalService {
   /**
    * Process automatic contributions
    */
-  static async processAutoContributions(userId: number): Promise<{ processed: number; errors: string[] }> {
+  static async processAutoContributions(userId: string): Promise<{ processed: number; errors: string[] }> {
     const autoContributeGoals = await this.getFiltered({ 
       userId, 
       isCompleted: false, 
@@ -499,7 +499,7 @@ export class FinancialGoalService {
   /**
    * Get goals by category
    */
-  static async getByCategory(userId: number, category: string): Promise<FinancialGoal[]> {
+  static async getByCategory(userId: string, category: string): Promise<FinancialGoal[]> {
     return await db
       .select()
       .from(financialGoals)
@@ -510,7 +510,7 @@ export class FinancialGoalService {
   /**
    * Get high priority goals
    */
-  static async getHighPriorityGoals(userId: number): Promise<GoalProgress[]> {
+  static async getHighPriorityGoals(userId: string): Promise<GoalProgress[]> {
     const highPriorityGoals = await this.getFiltered({ 
       userId, 
       priority: 'high', 

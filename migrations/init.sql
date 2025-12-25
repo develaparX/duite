@@ -1,10 +1,30 @@
 -- Finance Tracker Database Schema - Enhanced Version
 -- This script initializes the PostgreSQL database with all required tables for comprehensive financial management
 
--- Enable UUID extension for better ID generation (optional, using SERIAL for now)
--- CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- PostgreSQL 18+ has native UUIDv7 support, no extension needed
+-- UUIDv7 provides timestamp-based UUIDs that are sortable and have good index locality
 
--- Drop existing tables if they exist (for clean reinstall)
+-- FORCE DROP ALL EXISTING TABLES AND FUNCTIONS (for clean reinstall)
+-- Drop all tables in correct order (respecting foreign key constraints)
+DROP TABLE IF EXISTS cash_flow_projections CASCADE;
+DROP TABLE IF EXISTS notifications CASCADE;
+DROP TABLE IF EXISTS bill_reminders CASCADE;
+DROP TABLE IF EXISTS investment_balances CASCADE;
+DROP TABLE IF EXISTS savings_accounts CASCADE;
+DROP TABLE IF EXISTS financial_goals CASCADE;
+DROP TABLE IF EXISTS budgets CASCADE;
+DROP TABLE IF EXISTS recurring_transactions CASCADE;
+DROP TABLE IF EXISTS transactions CASCADE;
+DROP TABLE IF EXISTS categories CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+
+-- Drop any existing functions and triggers
+DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
+DROP FUNCTION IF EXISTS create_default_categories_for_user(UUID) CASCADE;
+DROP FUNCTION IF EXISTS create_default_categories_for_user(INTEGER) CASCADE;
+DROP FUNCTION IF EXISTS trigger_create_default_categories() CASCADE;
+
+-- Drop existing tables if they exist (for clean reinstall) - REDUNDANT BUT KEPT FOR SAFETY
 DROP TABLE IF EXISTS cash_flow_projections CASCADE;
 DROP TABLE IF EXISTS notifications CASCADE;
 DROP TABLE IF EXISTS bill_reminders CASCADE;
@@ -19,11 +39,11 @@ DROP TABLE IF EXISTS users CASCADE;
 
 -- Users table for authentication (Enhanced with currency and timezone)
 CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     full_name VARCHAR(255) NOT NULL,
-    currency VARCHAR(3) DEFAULT 'USD',
+    currency VARCHAR(3) DEFAULT 'IDR',
     timezone VARCHAR(50) DEFAULT 'UTC',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -31,11 +51,11 @@ CREATE TABLE users (
 
 -- Categories table for organizing transactions (Enhanced with hierarchical support)
 CREATE TABLE categories (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
     type VARCHAR(20) NOT NULL CHECK (type IN ('income', 'expense')),
-    parent_id INTEGER REFERENCES categories(id) ON DELETE CASCADE,
+    parent_id UUID REFERENCES categories(id) ON DELETE CASCADE,
     color VARCHAR(7) DEFAULT '#6B7280',
     icon VARCHAR(50),
     is_active BOOLEAN DEFAULT TRUE,
@@ -45,14 +65,14 @@ CREATE TABLE categories (
 
 -- Recurring transactions table
 CREATE TABLE recurring_transactions (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     type VARCHAR(20) NOT NULL CHECK (type IN ('income', 'expense', 'debt', 'receivable')),
     amount DECIMAL(12,2) NOT NULL CHECK (amount > 0),
-    currency VARCHAR(3) DEFAULT 'USD',
+    currency VARCHAR(3) DEFAULT 'IDR',
     description TEXT NOT NULL,
     category VARCHAR(100),
-    category_id INTEGER REFERENCES categories(id),
+    category_id UUID REFERENCES categories(id),
     frequency VARCHAR(20) NOT NULL CHECK (frequency IN ('daily', 'weekly', 'monthly', 'yearly')),
     interval_value INTEGER DEFAULT 1, -- every X frequency
     start_date DATE NOT NULL,
@@ -68,19 +88,19 @@ CREATE TABLE recurring_transactions (
 
 -- Transactions table for all financial records (Enhanced)
 CREATE TABLE transactions (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     type VARCHAR(20) NOT NULL CHECK (type IN ('income', 'expense', 'debt', 'receivable', 'transfer')),
     amount DECIMAL(12,2) NOT NULL CHECK (amount > 0),
-    currency VARCHAR(3) DEFAULT 'USD',
+    currency VARCHAR(3) DEFAULT 'IDR',
     description TEXT NOT NULL,
     category VARCHAR(100),
-    category_id INTEGER REFERENCES categories(id),
+    category_id UUID REFERENCES categories(id),
     transaction_date DATE NOT NULL,
     status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'settled', 'cancelled', 'pending')),
     related_party VARCHAR(255), -- For debts/receivables (creditor/debtor name)
     due_date DATE, -- For debts/receivables
-    recurring_id INTEGER REFERENCES recurring_transactions(id),
+    recurring_id UUID REFERENCES recurring_transactions(id),
     tags TEXT, -- JSON array of tags
     notes TEXT,
     attachments TEXT, -- JSON array of file paths
@@ -90,13 +110,13 @@ CREATE TABLE transactions (
 
 -- Budgets table for budget planning and tracking
 CREATE TABLE budgets (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     category VARCHAR(100),
-    category_id INTEGER REFERENCES categories(id),
+    category_id UUID REFERENCES categories(id),
     amount DECIMAL(12,2) NOT NULL CHECK (amount > 0),
-    currency VARCHAR(3) DEFAULT 'USD',
+    currency VARCHAR(3) DEFAULT 'IDR',
     period VARCHAR(20) NOT NULL CHECK (period IN ('weekly', 'monthly', 'yearly')),
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
@@ -109,13 +129,13 @@ CREATE TABLE budgets (
 
 -- Financial goals table for savings and financial targets
 CREATE TABLE financial_goals (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     target_amount DECIMAL(15,2) NOT NULL CHECK (target_amount > 0),
     current_amount DECIMAL(15,2) DEFAULT 0.00 CHECK (current_amount >= 0),
-    currency VARCHAR(3) DEFAULT 'USD',
+    currency VARCHAR(3) DEFAULT 'IDR',
     target_date DATE,
     category VARCHAR(50) NOT NULL, -- emergency_fund, vacation, house, car, etc.
     priority VARCHAR(20) DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high')),
@@ -129,14 +149,14 @@ CREATE TABLE financial_goals (
 
 -- Savings accounts table for dedicated savings tracking
 CREATE TABLE savings_accounts (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     account_type VARCHAR(50) NOT NULL, -- savings, checking, emergency, goal-based
     balance DECIMAL(15,2) DEFAULT 0.00 CHECK (balance >= 0),
-    currency VARCHAR(3) DEFAULT 'USD',
+    currency VARCHAR(3) DEFAULT 'IDR',
     interest_rate DECIMAL(5,4) DEFAULT 0.0000 CHECK (interest_rate >= 0),
-    goal_id INTEGER REFERENCES financial_goals(id),
+    goal_id UUID REFERENCES financial_goals(id),
     is_active BOOLEAN DEFAULT TRUE,
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -145,11 +165,11 @@ CREATE TABLE savings_accounts (
 
 -- Investment balances table for tracking portfolio values (Enhanced)
 CREATE TABLE investment_balances (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     account_name VARCHAR(255) NOT NULL,
     balance DECIMAL(15,2) NOT NULL,
-    currency VARCHAR(3) DEFAULT 'USD',
+    currency VARCHAR(3) DEFAULT 'IDR',
     account_type VARCHAR(100) DEFAULT 'general',
     broker VARCHAR(255),
     asset_class VARCHAR(100), -- stocks, bonds, crypto, real_estate, etc.
@@ -159,11 +179,11 @@ CREATE TABLE investment_balances (
 
 -- Bill reminders table for automated bill tracking
 CREATE TABLE bill_reminders (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     amount DECIMAL(12,2) NOT NULL CHECK (amount > 0),
-    currency VARCHAR(3) DEFAULT 'USD',
+    currency VARCHAR(3) DEFAULT 'IDR',
     due_date DATE NOT NULL,
     frequency VARCHAR(20) NOT NULL CHECK (frequency IN ('monthly', 'quarterly', 'yearly', 'weekly')),
     category VARCHAR(100),
@@ -180,14 +200,14 @@ CREATE TABLE bill_reminders (
 
 -- Notifications table for alerts and reminders
 CREATE TABLE notifications (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     type VARCHAR(50) NOT NULL, -- budget_alert, bill_reminder, goal_milestone, etc.
     title VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
     is_read BOOLEAN DEFAULT FALSE,
     priority VARCHAR(20) DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high')),
-    related_id INTEGER, -- ID of related entity (budget, bill, goal, etc.)
+    related_id UUID, -- ID of related entity (budget, bill, goal, etc.)
     related_type VARCHAR(50), -- budget, bill, goal, etc.
     scheduled_for TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -195,8 +215,8 @@ CREATE TABLE notifications (
 
 -- Cash flow projections table for financial forecasting
 CREATE TABLE cash_flow_projections (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     projection_date DATE NOT NULL,
     projected_income DECIMAL(15,2) DEFAULT 0.00,
     projected_expenses DECIMAL(15,2) DEFAULT 0.00,
@@ -257,12 +277,12 @@ CREATE INDEX idx_cash_flow_projections_date ON cash_flow_projections(projection_
 
 -- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER AS $
 BEGIN
     NEW.updated_at = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$ language 'plpgsql';
 
 -- Apply updated_at triggers to relevant tables
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
@@ -289,12 +309,9 @@ CREATE TRIGGER update_bill_reminders_updated_at BEFORE UPDATE ON bill_reminders
 CREATE TRIGGER update_cash_flow_projections_updated_at BEFORE UPDATE ON cash_flow_projections
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Insert default categories for common use cases
--- These will be created programmatically when users register, but here are some examples:
-
 -- Create a function to automatically create default categories for new users
-CREATE OR REPLACE FUNCTION create_default_categories_for_user(p_user_id INTEGER)
-RETURNS VOID AS $$
+CREATE OR REPLACE FUNCTION create_default_categories_for_user(p_user_id UUID)
+RETURNS VOID AS $
 BEGIN
     -- Income Categories
     INSERT INTO categories (user_id, name, type, color, icon) VALUES 
@@ -317,16 +334,16 @@ BEGIN
     (p_user_id, 'Insurance', 'expense', '#6366F1', 'shield'),
     (p_user_id, 'Other Expenses', 'expense', '#6B7280', 'minus-circle');
 END;
-$$ LANGUAGE plpgsql;
+$ LANGUAGE plpgsql;
 
 -- Create a trigger to automatically create default categories when a new user is created
 CREATE OR REPLACE FUNCTION trigger_create_default_categories()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER AS $
 BEGIN
     PERFORM create_default_categories_for_user(NEW.id);
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$ LANGUAGE plpgsql;
 
 CREATE TRIGGER create_default_categories_trigger
     AFTER INSERT ON users
@@ -335,31 +352,31 @@ CREATE TRIGGER create_default_categories_trigger
 
 -- Sample data for testing (optional - remove in production)
 -- This creates a test user with some sample data
-DO $$
+DO $
 DECLARE
-    test_user_id INTEGER;
+    test_user_id UUID;
 BEGIN
     -- Create test user (password is 'password123' hashed)
     INSERT INTO users (email, password_hash, full_name, currency) 
-    VALUES ('test@example.com', '$2b$10$rOzJqQZQQQQQQQQQQQQQQu', 'Test User', 'USD')
+    VALUES ('test@example.com', '$2b$10$rOzJqQZQQQQQQQQQQQQQQu', 'Test User', 'IDR')
     RETURNING id INTO test_user_id;
 
     -- Sample recurring transactions
     INSERT INTO recurring_transactions (user_id, type, amount, description, frequency, start_date, next_due_date) VALUES
-    (test_user_id, 'income', 5000.00, 'Monthly Salary', 'monthly', CURRENT_DATE, CURRENT_DATE + INTERVAL '1 month'),
-    (test_user_id, 'expense', 1200.00, 'Rent Payment', 'monthly', CURRENT_DATE, CURRENT_DATE + INTERVAL '1 month'),
-    (test_user_id, 'expense', 300.00, 'Utilities', 'monthly', CURRENT_DATE, CURRENT_DATE + INTERVAL '1 month');
+    (test_user_id, 'income', 5000000.00, 'Monthly Salary', 'monthly', CURRENT_DATE, CURRENT_DATE + INTERVAL '1 month'),
+    (test_user_id, 'expense', 1200000.00, 'Rent Payment', 'monthly', CURRENT_DATE, CURRENT_DATE + INTERVAL '1 month'),
+    (test_user_id, 'expense', 300000.00, 'Utilities', 'monthly', CURRENT_DATE, CURRENT_DATE + INTERVAL '1 month');
 
     -- Sample budget
     INSERT INTO budgets (user_id, name, amount, period, start_date, end_date) VALUES
-    (test_user_id, 'Monthly Budget', 4000.00, 'monthly', DATE_TRUNC('month', CURRENT_DATE), DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month' - INTERVAL '1 day');
+    (test_user_id, 'Monthly Budget', 4000000.00, 'monthly', DATE_TRUNC('month', CURRENT_DATE), DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month' - INTERVAL '1 day');
 
     -- Sample financial goal
     INSERT INTO financial_goals (user_id, name, target_amount, category, target_date) VALUES
-    (test_user_id, 'Emergency Fund', 10000.00, 'emergency_fund', CURRENT_DATE + INTERVAL '1 year');
+    (test_user_id, 'Emergency Fund', 50000000.00, 'emergency_fund', CURRENT_DATE + INTERVAL '1 year');
 
     -- Sample bill reminder
     INSERT INTO bill_reminders (user_id, name, amount, due_date, frequency, payee, next_due_date) VALUES
-    (test_user_id, 'Credit Card Payment', 500.00, CURRENT_DATE + INTERVAL '15 days', 'monthly', 'Bank XYZ', CURRENT_DATE + INTERVAL '15 days');
+    (test_user_id, 'Credit Card Payment', 2500000.00, CURRENT_DATE + INTERVAL '15 days', 'monthly', 'Bank XYZ', CURRENT_DATE + INTERVAL '15 days');
 
-END $$;
+END $;

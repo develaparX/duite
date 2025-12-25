@@ -137,7 +137,7 @@ export class CashFlowProjectionService {
   /**
    * Get projection by date
    */
-  static async getByDate(userId: number, projectionDate: string): Promise<CashFlowProjection | null> {
+  static async getByDate(userId: string, projectionDate: string): Promise<CashFlowProjection | null> {
     const [projection] = await db
       .select()
       .from(cashFlowProjections)
@@ -156,7 +156,7 @@ export class CashFlowProjectionService {
    * Get projections for date range
    */
   static async getProjections(
-    userId: number,
+    userId: string,
     startDate: string,
     endDate: string,
     limit: number = 100
@@ -179,7 +179,7 @@ export class CashFlowProjectionService {
    * Update actual values for a projection
    */
   static async updateActuals(
-    userId: number,
+    userId: string,
     projectionDate: string,
     actualIncome: number,
     actualExpenses: number
@@ -209,7 +209,7 @@ export class CashFlowProjectionService {
    * Generate projections based on recurring transactions and historical data
    */
   static async generateProjections(
-    userId: number,
+    userId: string,
     startDate: string,
     endDate: string,
     includeHistorical: boolean = true
@@ -318,7 +318,7 @@ export class CashFlowProjectionService {
   /**
    * Get historical averages for projections
    */
-  static async getHistoricalAverages(userId: number, days: number = 90): Promise<{
+  static async getHistoricalAverages(userId: string, days: number = 90): Promise<{
     dailyIncome: number;
     dailyExpenses: number;
     totalDays: number;
@@ -371,7 +371,7 @@ export class CashFlowProjectionService {
    * Get cash flow analysis with variance
    */
   static async getCashFlowAnalysis(
-    userId: number,
+    userId: string,
     startDate: string,
     endDate: string
   ): Promise<CashFlowAnalysis[]> {
@@ -432,7 +432,7 @@ export class CashFlowProjectionService {
    * Get cash flow summary
    */
   static async getCashFlowSummary(
-    userId: number,
+    userId: string,
     startDate: string,
     endDate: string
   ): Promise<CashFlowSummary> {
@@ -496,7 +496,7 @@ export class CashFlowProjectionService {
    * Generate future forecast with confidence levels
    */
   static async generateForecast(
-    userId: number,
+    userId: string,
     startDate: string,
     days: number = 30
   ): Promise<CashFlowForecast[]> {
@@ -560,7 +560,7 @@ export class CashFlowProjectionService {
   /**
    * Update actuals from transactions automatically
    */
-  static async updateActualsFromTransactions(userId: number, date: string): Promise<CashFlowProjection | null> {
+  static async updateActualsFromTransactions(userId: string, date: string): Promise<CashFlowProjection | null> {
     // Get actual transactions for the date
     const incomeResult = await db
       .select({

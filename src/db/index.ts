@@ -1,5 +1,5 @@
 // Main database exports
-export { db, client } from './connection';
+export { db, client, getDb, getClient } from './connection';
 export * from './schema';
 export * from './utils';
 

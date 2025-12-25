@@ -6,7 +6,7 @@
     "dev": "vite dev --port 3000",
     "build": "vite build",
     "build:cf": "cross-env NITRO_PRESET=cloudflare-module vite build",
-    "deploy": "npm run build:cf && wrangler deploy",
+    "deploy": "npm run build && wrangler deploy",
     "preview": "vite preview",
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",

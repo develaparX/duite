@@ -11,6 +11,7 @@ import {
 import { TransactionForm } from './TransactionForm';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 import type { NewTransaction } from '@/db/schema';
 
 interface AddTransactionDialogProps {
@@ -26,12 +27,18 @@ export function AddTransactionDialog({
 }: AddTransactionDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { token } = useAuth(); // Use AuthContext instead of localStorage
 
   const handleSubmit = async (data: NewTransaction) => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('authToken');
-      if (!token) throw new Error('Not authenticated');
+      
+      console.log('Token from AuthContext:', token);
+      console.log('Transaction data:', data);
+      
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
 
       const response = await fetch('/api/transactions', {
         method: 'POST',
@@ -42,16 +49,23 @@ export function AddTransactionDialog({
         body: JSON.stringify(data)
       });
 
+      console.log('Response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Failed to create transaction');
+        const errorData = await response.json();
+        console.error('API Error:', errorData);
+        throw new Error(errorData.error?.message || 'Failed to create transaction');
       }
+
+      const result = await response.json();
+      console.log('Transaction created:', result);
 
       toast.success('Transaction created successfully');
       setOpen(false);
       onSuccess?.();
     } catch (error) {
-      console.error(error);
-      toast.error('Failed to create transaction');
+      console.error('Error creating transaction:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to create transaction');
     } finally {
       setLoading(false);
     }

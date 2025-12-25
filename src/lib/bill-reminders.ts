@@ -62,7 +62,7 @@ export function validateBillReminderData(data: Partial<NewBillReminder>): {
  * Bill reminder filtering and sorting types
  */
 export interface BillReminderFilters {
-  userId: number;
+  userId: string;
   frequency?: 'weekly' | 'monthly' | 'quarterly' | 'yearly';
   category?: string;
   payee?: string;
@@ -181,7 +181,7 @@ export class BillReminderService {
   /**
    * Get bill reminder by ID
    */
-  static async getById(id: number, userId: number): Promise<BillReminder | null> {
+  static async getById(id: number, userId: string): Promise<BillReminder | null> {
     const [billReminder] = await db
       .select()
       .from(billReminders)
@@ -194,7 +194,7 @@ export class BillReminderService {
   /**
    * Update bill reminder
    */
-  static async update(id: number, userId: number, data: Partial<NewBillReminder>): Promise<BillReminder> {
+  static async update(id: number, userId: string, data: Partial<NewBillReminder>): Promise<BillReminder> {
     const validation = validateBillReminderData(data);
     if (!validation.isValid) {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
@@ -219,7 +219,7 @@ export class BillReminderService {
   /**
    * Delete bill reminder
    */
-  static async delete(id: number, userId: number): Promise<void> {
+  static async delete(id: number, userId: string): Promise<void> {
     const result = await db
       .delete(billReminders)
       .where(and(eq(billReminders.id, id), eq(billReminders.userId, userId)));
@@ -232,7 +232,7 @@ export class BillReminderService {
   /**
    * Mark bill as paid
    */
-  static async markAsPaid(id: number, userId: number, paidDate?: string): Promise<BillReminder> {
+  static async markAsPaid(id: number, userId: string, paidDate?: string): Promise<BillReminder> {
     const billReminder = await this.getById(id, userId);
     if (!billReminder) {
       throw new Error('Bill reminder not found');
@@ -254,7 +254,7 @@ export class BillReminderService {
   /**
    * Mark bill as unpaid (undo payment)
    */
-  static async markAsUnpaid(id: number, userId: number): Promise<BillReminder> {
+  static async markAsUnpaid(id: number, userId: string): Promise<BillReminder> {
     return await this.update(id, userId, {
       isPaid: false,
       lastPaidDate: null,
@@ -370,7 +370,7 @@ export class BillReminderService {
   /**
    * Get bill reminder status with analysis
    */
-  static async getBillStatus(billId: number, userId: number): Promise<BillReminderStatus | null> {
+  static async getBillStatus(billId: number, userId: string): Promise<BillReminderStatus | null> {
     const billReminder = await this.getById(billId, userId);
     if (!billReminder) {
       return null;
@@ -399,7 +399,7 @@ export class BillReminderService {
   /**
    * Get bills due soon (within reminder period)
    */
-  static async getBillsDueSoon(userId: number): Promise<BillReminderStatus[]> {
+  static async getBillsDueSoon(userId: string): Promise<BillReminderStatus[]> {
     const dueSoonBills = await this.getFiltered({ 
       userId, 
       isActive: true, 
@@ -421,7 +421,7 @@ export class BillReminderService {
   /**
    * Get overdue bills
    */
-  static async getOverdueBills(userId: number): Promise<BillReminderStatus[]> {
+  static async getOverdueBills(userId: string): Promise<BillReminderStatus[]> {
     const overdueBills = await this.getFiltered({ 
       userId, 
       isActive: true, 
@@ -442,7 +442,7 @@ export class BillReminderService {
   /**
    * Get bill reminders summary
    */
-  static async getBillSummary(userId: number): Promise<BillReminderSummary> {
+  static async getBillSummary(userId: string): Promise<BillReminderSummary> {
     const allBills = await db
       .select()
       .from(billReminders)
@@ -497,7 +497,7 @@ export class BillReminderService {
   /**
    * Create notifications for due bills
    */
-  static async createBillNotifications(userId: number): Promise<{ created: number; errors: string[] }> {
+  static async createBillNotifications(userId: string): Promise<{ created: number; errors: string[] }> {
     const dueSoonBills = await this.getBillsDueSoon(userId);
     const overdueBills = await this.getOverdueBills(userId);
     
@@ -553,7 +553,7 @@ export class BillReminderService {
   /**
    * Get upcoming bills (next 30 days)
    */
-  static async getUpcomingBills(userId: number, days: number = 30): Promise<BillReminderStatus[]> {
+  static async getUpcomingBills(userId: string, days: number = 30): Promise<BillReminderStatus[]> {
     const futureDate = new Date();
     futureDate.setDate(futureDate.getDate() + days);
 
@@ -583,7 +583,7 @@ export class BillReminderService {
   /**
    * Toggle bill active status
    */
-  static async toggleActive(id: number, userId: number): Promise<BillReminder> {
+  static async toggleActive(id: number, userId: string): Promise<BillReminder> {
     const billReminder = await this.getById(id, userId);
     if (!billReminder) {
       throw new Error('Bill reminder not found');

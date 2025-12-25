@@ -184,7 +184,7 @@ export class FinancialSummaryService {
    * Calculate comprehensive financial position for a user
    */
   static async calculateFinancialPosition(
-    userId: number,
+    userId: string,
     startDate?: string,
     endDate?: string
   ): Promise<FinancialPosition> {
@@ -364,7 +364,7 @@ export class FinancialSummaryService {
   /**
    * Get monthly comparison with enhanced metrics
    */
-  static async getMonthlyComparison(userId: number): Promise<MonthlyComparison> {
+  static async getMonthlyComparison(userId: string): Promise<MonthlyComparison> {
     const now = new Date();
     
     // Current month
@@ -443,7 +443,7 @@ export class FinancialSummaryService {
   /**
    * Get financial trends with enhanced metrics
    */
-  static async getFinancialTrends(userId: number, months: number = 6): Promise<FinancialTrends> {
+  static async getFinancialTrends(userId: string, months: number = 6): Promise<FinancialTrends> {
     const now = new Date();
     
     // Generate array of month offsets [months-1, ..., 0] to fetch in parallel
@@ -514,7 +514,7 @@ export class FinancialSummaryService {
   /**
    * Get real-time financial metrics
    */
-  static async getRealTimeMetrics(userId: number, existingPosition?: FinancialPosition): Promise<RealTimeMetrics> {
+  static async getRealTimeMetrics(userId: string, existingPosition?: FinancialPosition): Promise<RealTimeMetrics> {
     const position = existingPosition || await this.calculateFinancialPosition(userId);
     
     // Calculate burn rate (daily expense rate)
@@ -647,7 +647,7 @@ export class FinancialSummaryService {
   /**
    * Get daily spending comparison
    */
-  static async getDailySpending(userId: number): Promise<DailySpending> {
+  static async getDailySpending(userId: string): Promise<DailySpending> {
     const now = new Date();
     
     // This month

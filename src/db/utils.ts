@@ -36,7 +36,7 @@ export async function getUserById(id: number) {
 /**
  * Create default categories for a new user
  */
-export async function createDefaultCategories(userId: number) {
+export async function createDefaultCategories(userId: string) {
   const defaultCategories = [
     // Income categories
     { userId, name: 'Salary', type: 'income' as const, color: '#10B981' },

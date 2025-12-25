@@ -59,7 +59,7 @@ export function validateTransactionData(data: Partial<NewTransaction>): {
 
 // Transaction filtering types
 export interface TransactionFilters {
-  userId: number;
+  userId: string; // Changed from number to string for UUID
   type?: 'income' | 'expense' | 'debt' | 'receivable';
   status?: 'active' | 'settled' | 'cancelled';
   category?: string;
@@ -98,7 +98,7 @@ export class TransactionService {
   /**
    * Get transaction by ID
    */
-  static async getById(id: number, userId: number): Promise<Transaction | null> {
+  static async getById(id: number, userId: string): Promise<Transaction | null> {
     const [transaction] = await db
       .select()
       .from(transactions)
@@ -113,7 +113,7 @@ export class TransactionService {
    */
   static async update(
     id: number,
-    userId: number,
+    userId: string,
     data: Partial<NewTransaction>
   ): Promise<Transaction | null> {
     // Validate the update data
@@ -137,7 +137,7 @@ export class TransactionService {
   /**
    * Delete transaction
    */
-  static async delete(id: number, userId: number): Promise<boolean> {
+  static async delete(id: number, userId: string): Promise<boolean> {
     const result = await db
       .delete(transactions)
       .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
@@ -203,7 +203,7 @@ export class TransactionService {
    * Get transactions by date range
    */
   static async getByDateRange(
-    userId: number,
+    userId: string,
     startDate: string,
     endDate: string,
     type?: 'income' | 'expense' | 'debt' | 'receivable'
@@ -219,7 +219,7 @@ export class TransactionService {
   /**
    * Get daily expenses for a specific date
    */
-  static async getDailyExpenses(userId: number, date: string): Promise<Transaction[]> {
+  static async getDailyExpenses(userId: string, date: string): Promise<Transaction[]> {
     return this.getFiltered({
       userId,
       type: 'expense',
@@ -231,7 +231,7 @@ export class TransactionService {
   /**
    * Get monthly income for a specific month
    */
-  static async getMonthlyIncome(userId: number, year: number, month: number): Promise<Transaction[]> {
+  static async getMonthlyIncome(userId: string, year: number, month: number): Promise<Transaction[]> {
     const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
     const endDate = new Date(year, month, 0).toISOString().split('T')[0]; // Last day of month
 
@@ -247,7 +247,7 @@ export class TransactionService {
    * Get outstanding debts and receivables
    */
   static async getOutstanding(
-    userId: number,
+    userId: string,
     type: 'debt' | 'receivable'
   ): Promise<Transaction[]> {
     return this.getFiltered({
@@ -260,14 +260,14 @@ export class TransactionService {
   /**
    * Mark debt or receivable as settled
    */
-  static async markAsSettled(id: number, userId: number): Promise<Transaction | null> {
+  static async markAsSettled(id: number, userId: string): Promise<Transaction | null> {
     return this.update(id, userId, { status: 'settled' });
   }
 
   /**
    * Get transaction summary for a user
    */
-  static async getSummary(userId: number, startDate?: string, endDate?: string) {
+  static async getSummary(userId: string, startDate?: string, endDate?: string) {
     const filters: TransactionFilters = { userId };
     if (startDate) filters.startDate = startDate;
     if (endDate) filters.endDate = endDate;
@@ -353,7 +353,7 @@ export class DebtReceivableService {
    * Create a new debt record
    */
   static async createDebt(data: {
-    userId: number;
+    userId: string;
     amount: string;
     description: string;
     creditor: string;
@@ -379,7 +379,7 @@ export class DebtReceivableService {
    * Create a new receivable record
    */
   static async createReceivable(data: {
-    userId: number;
+    userId: string;
     amount: string;
     description: string;
     debtor: string;
@@ -404,7 +404,7 @@ export class DebtReceivableService {
   /**
    * Get all outstanding debts for a user
    */
-  static async getOutstandingDebts(userId: number): Promise<Transaction[]> {
+  static async getOutstandingDebts(userId: string): Promise<Transaction[]> {
     return TransactionService.getFiltered({
       userId,
       type: 'debt',
@@ -415,7 +415,7 @@ export class DebtReceivableService {
   /**
    * Get all outstanding receivables for a user
    */
-  static async getOutstandingReceivables(userId: number): Promise<Transaction[]> {
+  static async getOutstandingReceivables(userId: string): Promise<Transaction[]> {
     return TransactionService.getFiltered({
       userId,
       type: 'receivable',
@@ -426,7 +426,7 @@ export class DebtReceivableService {
   /**
    * Get all debts (active and settled) for a user
    */
-  static async getAllDebts(userId: number): Promise<Transaction[]> {
+  static async getAllDebts(userId: string): Promise<Transaction[]> {
     return TransactionService.getFiltered({
       userId,
       type: 'debt',
@@ -436,7 +436,7 @@ export class DebtReceivableService {
   /**
    * Get all receivables (active and settled) for a user
    */
-  static async getAllReceivables(userId: number): Promise<Transaction[]> {
+  static async getAllReceivables(userId: string): Promise<Transaction[]> {
     return TransactionService.getFiltered({
       userId,
       type: 'receivable',
@@ -446,7 +446,7 @@ export class DebtReceivableService {
   /**
    * Settle a debt (mark as paid)
    */
-  static async settleDebt(id: number, userId: number): Promise<Transaction | null> {
+  static async settleDebt(id: number, userId: string): Promise<Transaction | null> {
     // First verify it's a debt
     const debt = await TransactionService.getById(id, userId);
     if (!debt || debt.type !== 'debt') {
@@ -463,7 +463,7 @@ export class DebtReceivableService {
   /**
    * Collect a receivable (mark as received)
    */
-  static async collectReceivable(id: number, userId: number): Promise<Transaction | null> {
+  static async collectReceivable(id: number, userId: string): Promise<Transaction | null> {
     // First verify it's a receivable
     const receivable = await TransactionService.getById(id, userId);
     if (!receivable || receivable.type !== 'receivable') {
@@ -480,7 +480,7 @@ export class DebtReceivableService {
   /**
    * Get debt and receivable summary
    */
-  static async getSummary(userId: number): Promise<{
+  static async getSummary(userId: string): Promise<{
     totalOutstandingDebts: number;
     totalOutstandingReceivables: number;
     totalSettledDebts: number;
@@ -526,7 +526,7 @@ export class DebtReceivableService {
   /**
    * Get overdue debts and receivables
    */
-  static async getOverdue(userId: number): Promise<{
+  static async getOverdue(userId: string): Promise<{
     overdueDebts: Transaction[];
     overdueReceivables: Transaction[];
   }> {

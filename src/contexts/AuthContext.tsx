@@ -3,7 +3,7 @@ import { apiClient } from '@/lib/api-client';
 import { getErrorMessage, isAuthError } from '@/lib/error-handler';
 
 interface User {
-  id: number;
+  id: string; // Changed from number to string for UUID
   email: string;
   fullName: string;
   createdAt: string;
@@ -36,28 +36,39 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const isAuthenticated = !!user && !!token;
 
   const login = (newToken: string, newUser: User) => {
+    console.log('AuthContext login called with:', { token: newToken, user: newUser });
     setToken(newToken);
     setUser(newUser);
     setError(null);
-    try {
-      localStorage.setItem('auth_token', newToken);
-      localStorage.setItem('user', JSON.stringify(newUser));
-    } catch (e) {
-      // Ignore localStorage errors (SSR, private browsing, etc.)
+    
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('auth_token', newToken);
+        localStorage.setItem('user', JSON.stringify(newUser));
+        console.log('Token saved to localStorage:', newToken);
+      } catch (e) {
+        console.error('Failed to save to localStorage:', e);
+      }
     }
+    
     apiClient.setToken(newToken);
+    console.log('Token set in apiClient');
   };
 
   const logout = () => {
     setToken(null);
     setUser(null);
     setError(null);
-    try {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user');
-    } catch (e) {
-      // Ignore localStorage errors
+    
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user');
+      } catch (e) {
+        // Ignore localStorage errors
+      }
     }
+    
     apiClient.setToken(null);
   };
 
@@ -66,6 +77,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const refreshUser = async () => {
+    if (typeof window === 'undefined') {
+      setIsLoading(false);
+      return;
+    }
+
     let storedToken: string | null = null;
     try {
       storedToken = localStorage.getItem('auth_token');
@@ -101,7 +117,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   useEffect(() => {
-    // Check for stored authentication on client side
+    // Check for stored authentication on client side only
+    if (typeof window === 'undefined') {
+      setIsLoading(false);
+      return;
+    }
+
     let storedToken: string | null = null;
     let storedUser: string | null = null;
     
@@ -109,7 +130,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       storedToken = localStorage.getItem('auth_token');
       storedUser = localStorage.getItem('user');
     } catch (e) {
-      // localStorage not available (SSR, private browsing, etc.)
+      // localStorage not available (private browsing, etc.)
       setIsLoading(false);
       return;
     }
